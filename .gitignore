@@ -1,4 +1,5 @@
 .env
 env/
-workspace/
+runs/
 __pycache__/
+frontend/node_modules/

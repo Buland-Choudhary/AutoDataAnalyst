@@ -38,7 +38,7 @@ def generate_task_prompt(user_goal, absolute_csv_path, data_profile):
     return f"""USER GOAL: {user_goal}\n\nDATASET ABSOLUTE PATH: '{absolute_csv_path}'\n(You must use this exact absolute path to load the data).\n\nDATASET PROFILE:\n{data_profile}\nWrite the Python code to achieve the USER GOAL."""
 
 # ==========================================
-# PHASE 4 & 5: LLM & Agent Loop with Cost Tracking
+# PHASE 4 & 5: LLM & Autonomous Agent Loop
 # ==========================================
 def call_llm(system_prompt, user_prompt, model="gpt-4o-mini"):
     print(f"\n[SYSTEM] Calling {model}...")
@@ -52,8 +52,6 @@ def call_llm(system_prompt, user_prompt, model="gpt-4o-mini"):
             temperature=0.0
         )
         
-        # Calculate tokens and cost (Approximate pricing for gpt-4o-mini)
-        # Input: $0.150 / 1M tokens | Output: $0.600 / 1M tokens
         prompt_tokens = response.usage.prompt_tokens
         comp_tokens = response.usage.completion_tokens
         total_tokens = response.usage.total_tokens
@@ -76,7 +74,6 @@ def autonomous_agent(csv_path, user_goal, instance_dir, max_retries=3):
     total_instance_tokens = 0
     total_instance_cost = 0.0
     
-    # We MUST pass the absolute path so the script can find it no matter what folder it runs in
     abs_csv_path = os.path.abspath(csv_path)
     profile = get_data_profile(abs_csv_path)
     current_prompt = generate_task_prompt(user_goal, abs_csv_path, profile)
@@ -84,15 +81,12 @@ def autonomous_agent(csv_path, user_goal, instance_dir, max_retries=3):
     for attempt in range(1, max_retries + 1):
         print(f"\n{'='*40}\n--- Attempt {attempt}/{max_retries} ---")
         
-        # 1. Setup isolated folder for this specific attempt
         attempt_dir = os.path.join(instance_dir, f"attempt_{attempt}")
         os.makedirs(attempt_dir, exist_ok=True)
         
-        # Log the prompt used for this attempt
         with open(os.path.join(attempt_dir, "prompt.txt"), "w") as f:
             f.write(current_prompt)
             
-        # 2. Call LLM & Track Costs
         llm_response, tokens, cost = call_llm(SYSTEM_PROMPT, current_prompt)
         total_instance_tokens += tokens
         total_instance_cost += cost
@@ -100,11 +94,15 @@ def autonomous_agent(csv_path, user_goal, instance_dir, max_retries=3):
         
         clean_code = extract_code(llm_response)
         
-        # 3. Execute script isolated inside the attempt_dir
+        # Execute script
         success, output = execute_script(clean_code, workspace_dir=attempt_dir)
         
         if success:
             print("\n✅ Execution Succeeded! Output:\n", output)
+            
+            # ---------------------------------------------------------
+            # MANUAL LOGIC VALIDATION RESTORED
+            # ---------------------------------------------------------
             solved = input("\n[LOGIC CHECK] Did this output solve the problem? (y/n): ").strip().lower()
             if solved == 'y':
                 print(f"\n🎉 Success! Artifacts saved in: {attempt_dir}")
@@ -113,21 +111,21 @@ def autonomous_agent(csv_path, user_goal, instance_dir, max_retries=3):
             else:
                 feedback = input("Why did it fail? What should it do differently? ")
                 current_prompt = f"The code ran perfectly, but the user provided this logic feedback: {feedback}\nPREVIOUS CODE:\n{clean_code}\nRewrite the code to incorporate this feedback."
+            # ---------------------------------------------------------
         else:
             print("\n❌ Execution Failed!")
-            if "Execution aborted by user" in output: 
+            if "Execution aborted by user" in output or "Security Violation" in output: 
                 print(f"💰 Total Instance Tokens: {total_instance_tokens} | Total Cost: ${total_instance_cost:.6f}")
                 return False
             
-            # Prune error and update prompt for the next loop
             current_prompt = generate_correction_prompt(clean_code, prune_traceback(output))
             
-    print("\n🚨 Max retries reached.")
+    print("\n🚨 Max retries reached. The Agent failed to complete the task.")
     print(f"💰 Total Instance Tokens: {total_instance_tokens} | Total Cost: ${total_instance_cost:.6f}")
     return False
 
 # ==========================================
-# PHASE 1: Interactive CLI & Instance Isolation
+# PHASE 1: Interactive CLI
 # ==========================================
 def setup_instance_environment():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -142,7 +140,7 @@ def interactive_menu():
 
     datasets = glob.glob("datasets/*.csv")
     if not datasets:
-        print("❌ No CSV files found in /datasets folder. Please add some datasets.")
+        print("❌ No CSV files found in /datasets folder.")
         return
 
     print("\nAvailable Datasets:")
