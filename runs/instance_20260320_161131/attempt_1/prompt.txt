@@ -1,0 +1,34 @@
+USER GOAL: Clean the dataset by handling any non-standard missing values, then plot a correlation heatmap of all numerical features.
+
+DATASET ABSOLUTE PATH: '/home/buland/Downloads/ACADEMICS/AutoDataAnalyst/datasets/customer_churn.csv'
+(You must use this exact absolute path to load the data).
+
+DATASET PROFILE:
+--- DATASET INFO ---
+<class 'pandas.DataFrame'>
+RangeIndex: 1000 entries, 0 to 999
+Data columns (total 7 columns):
+ #   Column          Non-Null Count  Dtype  
+---  ------          --------------  -----  
+ 0   CustomerID      1000 non-null   int64  
+ 1   Age             1000 non-null   int64  
+ 2   MonthlyCharge   1000 non-null   float64
+ 3   TenureMonths    1000 non-null   int64  
+ 4   SupportTickets  1000 non-null   int64  
+ 5   PlanType        1000 non-null   str    
+ 6   Churn           1000 non-null   int64  
+dtypes: float64(1), int64(5), str(1)
+memory usage: 54.8 KB
+
+--- DATASET DESCRIPTION ---
+        CustomerID         Age  MonthlyCharge  TenureMonths  SupportTickets        Churn
+count  1000.000000  1000.00000    1000.000000   1000.000000     1000.000000  1000.000000
+mean    500.500000    43.81900      69.819558     35.589000        4.465000     0.247000
+std     288.819436    14.99103      28.972598     20.237827        2.899859     0.431483
+min       1.000000    18.00000      20.463202      1.000000        0.000000     0.000000
+25%     250.750000    31.00000      43.713773     19.000000        2.000000     0.000000
+50%     500.500000    44.00000      70.430453     35.000000        5.000000     0.000000
+75%     750.250000    56.00000      93.813751     52.000000        7.000000     0.000000
+max    1000.000000    69.00000     119.941373     71.000000        9.000000     1.000000
+
+Write the Python code to achieve the USER GOAL.

@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/home/buland/Downloads/ACADEMICS/AutoDataAnalyst/runs/instance_20260320_161131/attempt_1/agent_script.py", line 16, in <module>
+    correlation_matrix = data.corr()
+                         ^^^^^^^^^^^
+  File "/home/buland/Downloads/ACADEMICS/AutoDataAnalyst/env/lib/python3.12/site-packages/pandas/core/frame.py", line 13117, in corr
+    mat = data.to_numpy(dtype=float, na_value=np.nan, copy=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/buland/Downloads/ACADEMICS/AutoDataAnalyst/env/lib/python3.12/site-packages/pandas/core/frame.py", line 2081, in to_numpy
+    result = self._mgr.as_array(dtype=dtype, copy=copy, na_value=na_value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/buland/Downloads/ACADEMICS/AutoDataAnalyst/env/lib/python3.12/site-packages/pandas/core/internals/managers.py", line 1864, in as_array
+    arr = self._interleave(dtype=dtype, na_value=na_value)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/buland/Downloads/ACADEMICS/AutoDataAnalyst/env/lib/python3.12/site-packages/pandas/core/internals/managers.py", line 1917, in _interleave
+    arr = blk.values.to_numpy(  # type: ignore[union-attr]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/buland/Downloads/ACADEMICS/AutoDataAnalyst/env/lib/python3.12/site-packages/pandas/core/arrays/numpy_.py", line 589, in to_numpy
+    result = np.asarray(result, dtype=dtype)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: 'Basic'

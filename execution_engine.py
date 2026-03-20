@@ -4,28 +4,27 @@ import os
 
 def extract_code(text):
     """
-    Step 2.1: Strips markdown backticks from LLM output 
-    to isolate the raw Python code.
+    Strips markdown backticks from LLM output to isolate the raw Python code.
     """
-    # Using string concatenation to avoid breaking the markdown parser
     backticks = "`" * 3
     pattern = backticks + r"(?:python)?(.*?)" + backticks
     match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
     
-    # If regex finds markdown blocks, return the inner code. Otherwise, return raw text.
     if match:
         return match.group(1).strip()
     return text.strip()
 
-def execute_script(code_string, workspace_dir="workspace", timeout_seconds=10):
+def execute_script(code_string, workspace_dir, timeout_seconds=10):
     """
-    Steps 2.2 - 2.5: Saves code to a file, runs it securely via subprocess, 
-    and catches standard output or tracebacks.
+    Saves code to the specific attempt's folder, runs it securely via subprocess 
+    (from WITHIN that folder), and saves the outputs/errors to log files.
     """
     # Ensure workspace exists
     os.makedirs(workspace_dir, exist_ok=True)
     
-    script_path = os.path.join(workspace_dir, "temp_script.py")
+    script_path = os.path.join(workspace_dir, "agent_script.py")
+    stdout_log_path = os.path.join(workspace_dir, "stdout.txt")
+    stderr_log_path = os.path.join(workspace_dir, "stderr.txt")
     
     # Write the extracted code to the temporary file
     with open(script_path, "w") as f:
@@ -36,53 +35,45 @@ def execute_script(code_string, workspace_dir="workspace", timeout_seconds=10):
     print(code_string)
     print("----------------------")
     
-    # Step 2.4: Manual Security Gate
+    # Manual Security Gate
     approval = input("\n[SECURITY GATE] Do you want to execute this code? (y/n): ").strip().lower()
     if approval != 'y':
         return False, "Execution aborted by user at the Security Gate."
         
-    print("\n[SYSTEM] Executing script...")
+    print(f"\n[SYSTEM] Executing script inside {workspace_dir}...")
     
-    # Steps 2.2, 2.3 & 2.5: Subprocess execution with Hard Timeout
     try:
-        # Using python3 specifically for your Ubuntu environment
+        # Run process. `cwd=workspace_dir` ensures plots save exactly in this folder.
+        # We pass the absolute path to the script to be safe.
+        abs_script_path = os.path.abspath(script_path)
         result = subprocess.run(
-            ["python3", script_path], 
+            ["python3", abs_script_path], 
             capture_output=True,
             text=True,
-            timeout=timeout_seconds
+            timeout=timeout_seconds,
+            cwd=workspace_dir 
         )
+        
+        # Log outputs
+        if result.stdout:
+            with open(stdout_log_path, "w") as f:
+                f.write(result.stdout)
         
         # Check if the process threw a Python traceback
         if result.returncode != 0:
+            with open(stderr_log_path, "w") as f:
+                f.write(result.stderr)
             return False, result.stderr
             
-        # Return successful standard output
         return True, result.stdout
         
     except subprocess.TimeoutExpired:
-        return False, f"Timeout Error: Script exceeded the {timeout_seconds}-second limit."
+        error_msg = f"Timeout Error: Script exceeded the {timeout_seconds}-second limit."
+        with open(stderr_log_path, "w") as f:
+            f.write(error_msg)
+        return False, error_msg
     except Exception as e:
-        return False, f"System Error: {str(e)}"
-
-# --- Test Block ---
-if __name__ == "__main__":
-    # A dummy response mimicking what the LLM will eventually return
-    # Constructed dynamically to prevent parser issues
-    dummy_llm_response = (
-        "Here is the code to test your environment:\n"
-        + "`" * 3 + "python\n"
-        + "import pandas as pd\n"
-        + "print('Pandas imported successfully.')\n"
-        + "print('Execution Engine is working perfectly.')\n"
-        + "`" * 3
-    )
-    
-    print("Testing Phase 2 Engine...")
-    clean_code = extract_code(dummy_llm_response)
-    success, output = execute_script(clean_code)
-    
-    if success:
-        print("\n✅ Execution Succeeded. Output:\n", output)
-    else:
-        print("\n❌ Execution Failed. Error:\n", output)
+        error_msg = f"System Error: {str(e)}"
+        with open(stderr_log_path, "w") as f:
+            f.write(error_msg)
+        return False, error_msg
