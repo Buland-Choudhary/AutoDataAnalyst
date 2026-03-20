@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Bot, Play, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
-const API_BASE = "https://your-render-url-here.onrender.com"; 
+const API_BASE = "https://autodataanalyst.onrender.com"; 
 
 export default function App() {
   const [datasets, setDatasets] = useState([]);
