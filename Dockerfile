@@ -12,7 +12,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the core Python scripts and the datasets folder
-COPY api.py execution_engine.py ./
+COPY api.py execution_engine.py backend_config.py ./
 COPY datasets/ ./datasets/
 
 # Create the /runs directory for output artifacts
