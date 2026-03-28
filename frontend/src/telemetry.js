@@ -14,7 +14,7 @@ async function notifyBackendWithRetry(notifyUrl, maxAttempts, delayMs) {
   if (!notifyUrl) return;
 
   const payload = {
-    source: 'Auto Data Analyst'
+    source: 'Auto Data Analyst',
     path: window.location.pathname,
     referrer: document.referrer,
     language: navigator.language,
